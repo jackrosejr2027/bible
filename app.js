@@ -1699,6 +1699,9 @@ function moveChapter(direction, bookChapters){
   render();
 }
 function render(){
+  const spotlightChapters=books[selectedBook]||[];
+  const spotlightChapter=spotlightChapters.find(chapter=>Number(chapter.number)===Number(selectedChapter));
+  window.dispatchEvent(new CustomEvent('stillwaters:reading-changed',{detail:{book:selectedBook,chapter:selectedChapter,chapters:spotlightChapters,verses:spotlightChapter?.verses||[],bookOrder:bibleBookOrder,chaptersByBook:books}}));
   const readingSection=document.querySelector('.reading');
   const topicKicker=document.querySelector('#topic-kicker');
   const topicTitle=document.querySelector('#topic-title');

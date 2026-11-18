@@ -1,49 +1,137 @@
-const psalmTitle = document.querySelector('#psalm-spotlight-title');
-const psalmText = document.querySelector('#psalm-spotlight-text');
+const spotlight = document.querySelector('#psalm-spotlight');
+const titleNode = document.querySelector('#psalm-spotlight-title');
+const textNode = document.querySelector('#psalm-spotlight-text');
+const showToggle = document.querySelector('#show-random-toggle');
+const hideButton = document.querySelector('#hide-random-button');
+const bookSelect = document.querySelector('#random-book-select');
 const previousButton = document.querySelector('#psalm-previous');
 const nextButton = document.querySelector('#psalm-next');
 const randomButton = document.querySelector('#psalm-random');
+let bookOrder = [];
+let chaptersByBook = {};
+let selectedBook = '';
+let mainSelectedBook = '';
+let selectedChapters = [];
+let currentIndex = -1;
 
-if (psalmTitle && psalmText) {
-  fetch('psalms.json')
-    .then(response => {
-      if (!response.ok) throw new Error('Could not load psalms');
-      return response.json();
-    })
-    .then(psalms => {
-      if (!Array.isArray(psalms) || psalms.length < 2) throw new Error('Psalm data is unavailable');
-      let currentIndex = -1;
-
-      const displayPsalm = index => {
-        currentIndex = (index + psalms.length) % psalms.length;
-        const psalm = psalms[currentIndex];
-        psalmTitle.textContent = 'Psalm ' + psalm.number;
-        psalmText.replaceChildren(...psalm.verses.map((verse, verseIndex) => {
-          const paragraph = document.createElement('p');
-          const number = document.createElement('span');
-          number.className = 'psalm-verse-number';
-          number.textContent = String(verseIndex + 1);
-          paragraph.append(number, document.createTextNode(verse));
-          return paragraph;
-        }));
-      };
-
-      const showRandomPsalm = () => {
-        let nextIndex;
-        do {
-          nextIndex = Math.floor(Math.random() * psalms.length);
-        } while (nextIndex === currentIndex);
-        displayPsalm(nextIndex);
-      };
-
-      previousButton?.addEventListener('click', () => displayPsalm(currentIndex - 1));
-      nextButton?.addEventListener('click', () => displayPsalm(currentIndex + 1));
-      randomButton?.addEventListener('click', showRandomPsalm);
-      showRandomPsalm();
-      window.setInterval(showRandomPsalm, 5 * 60 * 1000);
-    })
-    .catch(error => {
-      console.error('Psalm spotlight:', error);
-      psalmText.textContent = 'A psalm will appear here when scripture is available.';
-    });
+function showBookPrompt() {
+  titleNode.textContent = 'Random Scripture';
+  textNode.textContent = 'Choose a book to see a random chapter.';
 }
+
+function setVisible(visible) {
+  spotlight.hidden = !visible;
+  showToggle.setAttribute('aria-pressed', String(visible));
+  showToggle.setAttribute('aria-label', visible ? 'Hide random scripture' : 'Show random scripture');
+  if (!visible) return;
+  const preferredBook = mainSelectedBook || bookSelect.value;
+  if (preferredBook && chaptersByBook[preferredBook]) {
+    selectedBook = preferredBook;
+    selectedChapters = chaptersByBook[preferredBook];
+    bookSelect.value = preferredBook;
+    currentIndex = -1;
+  }
+  if (!selectedBook) {
+    showBookPrompt();
+    bookSelect.focus();
+    return;
+  }
+  showRandomPassage();
+}
+
+function renderVerses(verses) {
+  textNode.replaceChildren(...verses.map((verse, index) => {
+    const paragraph = document.createElement('p');
+    const number = document.createElement('span');
+    number.className = 'psalm-verse-number';
+    number.textContent = String(index + 1);
+    paragraph.append(number, document.createTextNode(verse));
+    return paragraph;
+  }));
+}
+
+function showBookChapter(index) {
+  if (!selectedChapters.length) return;
+  currentIndex = (index + selectedChapters.length) % selectedChapters.length;
+  const chapter = selectedChapters[currentIndex];
+  const chapterNumber = Number(chapter.number) || currentIndex + 1;
+  titleNode.textContent = selectedBook + ' ' + chapterNumber;
+  renderVerses(chapter.verses || []);
+}
+
+function randomIndex(length) {
+  if (length < 2) return 0;
+  let next;
+  do { next = Math.floor(Math.random() * length); } while (next === currentIndex);
+  return next;
+}
+
+function showRandomPassage() {
+  if (!selectedBook || !selectedChapters.length) {
+    showBookPrompt();
+    return;
+  }
+  showBookChapter(randomIndex(selectedChapters.length));
+}
+
+function stepPassage(direction) {
+  if (selectedBook && selectedChapters.length) showBookChapter(currentIndex + direction);
+}
+
+function fillBookOptions() {
+  const currentValue = bookSelect.value;
+  bookSelect.replaceChildren();
+  const prompt = document.createElement('option');
+  prompt.value = '';
+  prompt.textContent = 'Choose a book…';
+  bookSelect.append(prompt);
+  bookOrder.forEach(book => {
+    const option = document.createElement('option');
+    option.value = book;
+    option.textContent = book;
+    bookSelect.append(option);
+  });
+  if (bookOrder.includes(currentValue)) bookSelect.value = currentValue;
+  bookSelect.disabled = bookOrder.length === 0;
+}
+
+showToggle.addEventListener('click', () => setVisible(spotlight.hidden));
+hideButton.addEventListener('click', () => setVisible(false));
+bookSelect.addEventListener('change', () => {
+  selectedBook = bookSelect.value;
+  selectedChapters = chaptersByBook[selectedBook] || [];
+  currentIndex = -1;
+  if (selectedBook) showRandomPassage();
+  else showBookPrompt();
+});
+previousButton.addEventListener('click', () => stepPassage(-1));
+nextButton.addEventListener('click', () => stepPassage(1));
+randomButton.addEventListener('click', showRandomPassage);
+
+window.addEventListener('stillwaters:reading-changed', event => {
+  const detail = event.detail || {};
+  if (Array.isArray(detail.bookOrder) && detail.chaptersByBook) {
+    bookOrder = detail.bookOrder;
+    chaptersByBook = detail.chaptersByBook;
+    const previousBook = bookSelect.value;
+    fillBookOptions();
+    if (previousBook && chaptersByBook[previousBook]) {
+      selectedBook = previousBook;
+      selectedChapters = chaptersByBook[previousBook];
+    }
+    const nextMainBook = detail.book || '';
+    const mainBookChanged = nextMainBook !== mainSelectedBook;
+    mainSelectedBook = nextMainBook;
+    if (mainBookChanged && mainSelectedBook && chaptersByBook[mainSelectedBook]) {
+      selectedBook = mainSelectedBook;
+      selectedChapters = chaptersByBook[mainSelectedBook];
+      bookSelect.value = mainSelectedBook;
+      currentIndex = -1;
+      if (!spotlight.hidden) showRandomPassage();
+    }
+  }
+});
+
+window.setInterval(() => {
+  if (!spotlight.hidden && selectedBook && selectedChapters.length) showRandomPassage();
+}, 5 * 60 * 1000);
