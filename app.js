@@ -614,6 +614,7 @@ const translationPatchCache=new Map();
 const translationPatchMapCache=new Map();
 const TRANSLATION_STORAGE_KEY='still-waters-translation-v1';
 let bibleBookOrder=[];
+let sidebarCategoryGroups={};
 const bookSelect=document.querySelector('#book-select');
 const bookSearchInput=document.querySelector('#book-search');
 const bookSearchResults=document.querySelector('#book-search-results');
@@ -1701,7 +1702,7 @@ function moveChapter(direction, bookChapters){
 function render(){
   const spotlightChapters=books[selectedBook]||[];
   const spotlightChapter=spotlightChapters.find(chapter=>Number(chapter.number)===Number(selectedChapter));
-  window.dispatchEvent(new CustomEvent('stillwaters:reading-changed',{detail:{book:selectedBook,chapter:selectedChapter,chapters:spotlightChapters,verses:spotlightChapter?.verses||[],bookOrder:bibleBookOrder,chaptersByBook:books}}));
+  window.dispatchEvent(new CustomEvent('stillwaters:reading-changed',{detail:{book:selectedBook,chapter:selectedChapter,chapters:spotlightChapters,verses:spotlightChapter?.verses||[],bookOrder:bibleBookOrder,chaptersByBook:books,categoriesByBook:sidebarCategoryGroups}}));
   const readingSection=document.querySelector('.reading');
   const topicKicker=document.querySelector('#topic-kicker');
   const topicTitle=document.querySelector('#topic-title');
@@ -2869,6 +2870,7 @@ Promise.all([fetch('./bible.json').then(response=>{if(!response.ok)throw new Err
   bible=loadedBible;
   bibleMetadata=metadata;
   bibleBookOrder=bible.order;
+  sidebarCategoryGroups=Object.fromEntries(bibleBookOrder.map(book=>[book,topicGroupsForBook(book)]));
   kjvWordIndex=buildKJVWordIndex();
   kjvWordList=[...kjvWordIndex.values()].sort((a,b)=>a.word.localeCompare(b.word));
   if(dictionaryDialog.open)renderDictionaryWordList(dictionarySearch.value);

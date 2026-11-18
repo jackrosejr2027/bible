@@ -13,6 +13,7 @@ let selectedBook = '';
 let mainSelectedBook = '';
 let selectedChapters = [];
 let currentIndex = -1;
+let seenChapters = new Set();
 
 function showBookPrompt() {
   titleNode.textContent = 'Random Scripture';
@@ -26,10 +27,11 @@ function setVisible(visible) {
   if (!visible) return;
   const preferredBook = mainSelectedBook || bookSelect.value;
   if (preferredBook && chaptersByBook[preferredBook]) {
+    if (selectedBook !== preferredBook) seenChapters = new Set();
     selectedBook = preferredBook;
     selectedChapters = chaptersByBook[preferredBook];
     bookSelect.value = preferredBook;
-    currentIndex = -1;
+    if (currentIndex >= selectedChapters.length) currentIndex = -1;
   }
   if (!selectedBook) {
     showBookPrompt();
@@ -53,6 +55,7 @@ function renderVerses(verses) {
 function showBookChapter(index) {
   if (!selectedChapters.length) return;
   currentIndex = (index + selectedChapters.length) % selectedChapters.length;
+  seenChapters.add(currentIndex);
   const chapter = selectedChapters[currentIndex];
   const chapterNumber = Number(chapter.number) || currentIndex + 1;
   titleNode.textContent = selectedBook + ' ' + chapterNumber;
@@ -61,9 +64,12 @@ function showBookChapter(index) {
 
 function randomIndex(length) {
   if (length < 2) return 0;
-  let next;
-  do { next = Math.floor(Math.random() * length); } while (next === currentIndex);
-  return next;
+  let available = Array.from({length}, (_, index) => index).filter(index => !seenChapters.has(index));
+  if (!available.length) {
+    seenChapters = new Set(currentIndex >= 0 ? [currentIndex] : []);
+    available = Array.from({length}, (_, index) => index).filter(index => !seenChapters.has(index));
+  }
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 function showRandomPassage() {
@@ -101,6 +107,7 @@ bookSelect.addEventListener('change', () => {
   selectedBook = bookSelect.value;
   selectedChapters = chaptersByBook[selectedBook] || [];
   currentIndex = -1;
+  seenChapters = new Set();
   if (selectedBook) showRandomPassage();
   else showBookPrompt();
 });
@@ -127,6 +134,7 @@ window.addEventListener('stillwaters:reading-changed', event => {
       selectedChapters = chaptersByBook[mainSelectedBook];
       bookSelect.value = mainSelectedBook;
       currentIndex = -1;
+      seenChapters = new Set();
       if (!spotlight.hidden) showRandomPassage();
     }
   }
