@@ -1,0 +1,11 @@
+.psalm-spotlight{width:100%;margin:0;padding:22px 10px 18px;border-top:1px solid rgba(117,91,56,.2);text-align:center}
+.psalm-spotlight h2{margin:0 0 12px;color:#7f1d27;font:600 10px 'DM Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase}
+#psalm-spotlight-text{max-width:58ch;margin:0 auto;color:#667466;font:18px/1.55 'EB Garamond',Georgia,serif}
+#psalm-spotlight-text p{margin:0 0 7px}
+#psalm-spotlight-text p:last-child{margin-bottom:0}
+.psalm-verse-number{padding-right:.35em;color:#9a8060;font:11px 'DM Sans',sans-serif;vertical-align:super}
+.psalm-controls{display:flex;justify-content:center;align-items:center;gap:10px;margin:18px auto 0}
+.psalm-controls button{min-height:34px;padding:5px 12px;border:1px solid rgba(117,91,56,.25);border-radius:3px;background:transparent;color:#71634a;font:12px 'DM Sans',sans-serif;cursor:pointer}
+.psalm-controls button:hover{background:rgba(117,91,56,.08);color:#7f1d27}
+.psalm-controls button:focus-visible{outline:2px solid #8b6937;outline-offset:2px}
+@media(max-width:620px){.psalm-spotlight{padding:19px 4px 14px}#psalm-spotlight-text{font-size:17px;line-height:1.55}.psalm-spotlight h2{margin-bottom:10px}.psalm-controls{gap:8px;margin-top:15px}.psalm-controls button{padding-inline:10px}}

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="music-player.css" />
   <link rel="stylesheet" href="button-hints.css" />
   <link rel="stylesheet" href="help-tour.css" />
+  <link rel="stylesheet" href="psalm-spotlight.css" />
 </head>
 <body>
   <main class="shell">
@@ -45,6 +46,15 @@
     <section class="our-father-prayer" aria-labelledby="our-father-title">
       <h2 id="our-father-title">Our Father</h2>
       <div id="our-father-prayer-text"></div>
+    </section>
+    <section id="psalm-spotlight" class="psalm-spotlight" aria-labelledby="psalm-spotlight-title">
+      <h2 id="psalm-spotlight-title">Psalm</h2>
+      <div id="psalm-spotlight-text" aria-live="polite"></div>
+      <nav class="psalm-controls" aria-label="Psalm navigation">
+        <button id="psalm-previous" type="button" aria-label="Previous psalm">← Previous</button>
+        <button id="psalm-random" type="button">Random</button>
+        <button id="psalm-next" type="button" aria-label="Next psalm">Next →</button>
+      </nav>
     </section>
     <nav id="book-directory" class="book-directory" aria-label="Bible books">
       <div class="directory-label">Books</div>
@@ -240,6 +250,7 @@
     </div>
   </aside>
   <script type="module" src="app.js"></script>
+  <script type="module" src="psalm-spotlight.js"></script>
   <script type="module" src="tool-sidebar.js"></script>
   <script type="module" src="book-art-gallery.js"></script>
 </body>
